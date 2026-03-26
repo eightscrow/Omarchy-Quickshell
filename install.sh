@@ -28,6 +28,20 @@ Options:
 EOF
 }
 
+wait_for_qs_command() {
+    local attempt
+
+    for attempt in {1..10}; do
+        hash -r 2>/dev/null || true
+        if command -v qs >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 1
+    done
+
+    error "quickshell was installed, but the qs command is still unavailable"
+}
+
 while (($# > 0)); do
     case "$1" in
         -h|--help)
@@ -46,6 +60,7 @@ info "Detected distro family: $DISTRO_FAMILY"
 
 if ! command -v qs >/dev/null 2>&1; then
     install_quickshell_package "$DISTRO_FAMILY"
+    wait_for_qs_command
 fi
 
 install_overview_assets "$repo_root"

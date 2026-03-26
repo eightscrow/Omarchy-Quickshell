@@ -2,13 +2,31 @@
 
 set -euo pipefail
 
-start_overview_instance() {
-    if qs --path "$HOME/.config/quickshell/overview" list --all 2>/dev/null | grep -q '^Instance '; then
-        qs kill -p "$HOME/.config/quickshell/overview" >/dev/null 2>&1 || true
-    fi
+overview_instance_running() {
+    qs --path "$HOME/.config/quickshell/overview" list --all 2>/dev/null | grep -q '^Instance '
+}
 
-    qs -p "$HOME/.config/quickshell/overview" -d >/dev/null 2>&1 || error "Failed to start Quickshell overview"
-    sleep 1.5
+start_overview_instance() {
+    local attempt
+
+    for attempt in {1..5}; do
+        if overview_instance_running; then
+            qs kill -p "$HOME/.config/quickshell/overview" >/dev/null 2>&1 || true
+            sleep 0.5
+        fi
+
+        if qs -p "$HOME/.config/quickshell/overview" -d >/dev/null 2>&1; then
+            sleep 1.5
+            if overview_instance_running; then
+                return 0
+            fi
+        fi
+
+        warning "Quickshell overview start attempt ${attempt}/5 failed; retrying"
+        sleep 1
+    done
+
+    error "Failed to start Quickshell overview"
 }
 
 validate_install() {
@@ -21,7 +39,7 @@ validate_install() {
 
     start_overview_instance
 
-    qs --path "$HOME/.config/quickshell/overview" list --all 2>/dev/null | grep -q '^Instance ' || error "Overview instance is not running after install"
+    overview_instance_running || error "Overview instance is not running after install"
 
     success "Validation passed"
 }
