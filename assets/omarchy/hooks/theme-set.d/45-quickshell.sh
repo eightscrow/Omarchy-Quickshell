@@ -34,14 +34,48 @@ fi
 
 extract_color() {
     local color_name="$1"
-    awk -v color="$color_name" '
-        $1 == color && /=/ {
-            if (match($0, /#([0-9a-fA-F]{6})/)) {
-                print substr($0, RSTART + 1, 6)
-                exit
+    local section=""
+    local lookup="$color_name"
+
+    case "$color_name" in
+        color0)  section="normal"; lookup="black" ;;
+        color1)  section="normal"; lookup="red" ;;
+        color2)  section="normal"; lookup="green" ;;
+        color3)  section="normal"; lookup="yellow" ;;
+        color4)  section="normal"; lookup="blue" ;;
+        color5)  section="normal"; lookup="magenta" ;;
+        color6)  section="normal"; lookup="cyan" ;;
+        color7)  section="normal"; lookup="white" ;;
+        color8)  section="bright"; lookup="black" ;;
+        color9)  section="bright"; lookup="red" ;;
+        color10) section="bright"; lookup="green" ;;
+        color11) section="bright"; lookup="yellow" ;;
+        color12) section="bright"; lookup="blue" ;;
+        color13) section="bright"; lookup="magenta" ;;
+        color14) section="bright"; lookup="cyan" ;;
+        color15) section="bright"; lookup="white" ;;
+    esac
+
+    if [[ -n "$section" ]]; then
+        awk -v section="$section" -v color="$lookup" '
+            /^\[/ { gsub(/[\[\] \t]/, "", $0); current_section = tolower($0) }
+            current_section == section && $1 == color && /=/ {
+                if (match($0, /#([0-9a-fA-F]{6})/)) {
+                    print substr($0, RSTART + 1, 6)
+                    exit
+                }
             }
-        }
-    ' "$input_file"
+        ' "$input_file"
+    else
+        awk -v color="$color_name" '
+            $1 == color && /=/ {
+                if (match($0, /#([0-9a-fA-F]{6})/)) {
+                    print substr($0, RSTART + 1, 6)
+                    exit
+                }
+            }
+        ' "$input_file"
+    fi
 }
 
 clamp_channel() {
