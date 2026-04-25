@@ -209,9 +209,9 @@ QtObject {
 }
 EOF
 
-if qs --path "$overview_dir" list --all 2>/dev/null | grep -q '^Instance '; then
+if command -v qs >/dev/null 2>&1; then
     qs kill -p "$overview_dir" >/dev/null 2>&1 || true
-    sleep 0.3
+    sleep 0.5
     qs -p "$overview_dir" -d >/dev/null 2>&1 || true
 fi
 
