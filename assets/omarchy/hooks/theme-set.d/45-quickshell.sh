@@ -90,6 +90,10 @@ clamp_channel() {
 
 hex_to_rgb() {
     local hex="$1"
+    if [[ -z "$hex" || ${#hex} -lt 6 ]]; then
+        echo "0 0 0"
+        return
+    fi
     echo "$((16#${hex:0:2})) $((16#${hex:2:2})) $((16#${hex:4:2}))"
 }
 
@@ -137,16 +141,22 @@ accent="$(extract_color accent)"
 base_variant="$(extract_color color0)"
 secondary="$(extract_color color13)"
 
-if [[ -z "$background" || -z "$foreground" ]]; then
-    error "Failed to extract required colors from $input_file"
+if [[ -z "$background" ]]; then
+    background="121212"
+fi
+
+if [[ -z "$foreground" ]]; then
+    foreground="ffffff"
 fi
 
 if [[ -z "$accent" ]]; then
     accent="$(extract_color color12)"
+    [[ -z "$accent" ]] && accent="$foreground"
 fi
 
 if [[ -z "$secondary" ]]; then
-    secondary="$accent"
+    secondary="$(extract_color color14)"
+    [[ -z "$secondary" ]] && secondary="$accent"
 fi
 
 if [[ -z "$base_variant" ]]; then
